@@ -26,7 +26,8 @@ async function run() {
         const productsCollection = smartdb.collection("products");
 
         app.get("/products", async (req, res) => {
-            const result = await productsCollection.find().toArray();
+            const sortFields = { price_min: -1 };
+            const result = await productsCollection.find().sort(sortFields).skip(2).limit(4).toArray();
             res.send(result);
         })
 
