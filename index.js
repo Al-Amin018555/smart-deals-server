@@ -8,9 +8,6 @@ const port = process.env.PORT || 3000;
 app.use(cors())
 app.use(express.json())
 
-//smartdb
-//MjdN5YkIKcj5lW8C
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.q3bebek.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -32,6 +29,20 @@ async function run() {
             const newProduct = req.body;
             const result = await productsCollection.insertOne(newProduct);
             res.send(result)
+        })
+
+        app.patch("/products/:id", async (req, res) => {
+            const id = req.params.id;
+            const updatedProduct = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    name: updatedProduct.name,
+                    age: updatedProduct.age,
+                }
+            };
+            const result = await productsCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
         app.delete("/products/:id", async (req, res) => {
