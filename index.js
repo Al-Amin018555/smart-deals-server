@@ -24,11 +24,23 @@ async function run() {
         await client.connect();
         const smartdb = client.db("smartdb");
         const productsCollection = smartdb.collection("products");
+        const bidsCollection = smartdb.collection("bids");
 
         app.get("/products", async (req, res) => {
-            const projectFields = {title: 1,price_min:1,price_max: 1,image:1}
-            const sortFields = { price_min: -1 };
-            const result = await productsCollection.find().sort(sortFields).skip(2).limit(4).project(projectFields).toArray();
+            // const projectFields = {title: 1,price_min:1,price_max: 1,image:1}
+            // const sortFields = { price_min: -1 };
+            // const result = await productsCollection.find().sort(sortFields).skip(2).limit(4).project(projectFields).toArray();
+
+            //getting products based on email using query parameter
+
+            const email = req.query.email;
+            console.log(email);
+            const query = {};
+            if (email) {
+                query.email = email;
+            }
+
+            const result = await productsCollection.find(query).toArray();
             res.send(result);
         })
 
@@ -65,6 +77,8 @@ async function run() {
             const result = await productsCollection.deleteOne(query);
             res.send(result);
         })
+
+      
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
