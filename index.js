@@ -78,7 +78,17 @@ async function run() {
             res.send(result);
         })
 
-      
+        //bids related api's
+
+        app.get("/bids", async (req, res) => {
+            const email = req.query.email;
+            const query = {};
+            if (email) {
+                query.buyer_email = email;
+            }
+            const result = await bidsCollection.find(query).toArray();
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
