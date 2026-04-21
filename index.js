@@ -25,7 +25,26 @@ async function run() {
         const smartdb = client.db("smartdb");
         const productsCollection = smartdb.collection("products");
         const bidsCollection = smartdb.collection("bids");
+        const usersCollection = smartdb.collection("users");
 
+        //users related api's
+        app.post("/users", async (req, res) => {
+            const newUser = req.body;
+            const email = req.body.email;
+            const query = { email: email };
+            const existingEmail = await usersCollection.findOne(query);
+            if (existingEmail) {
+                res.send({ message: "user already exists. do not insert again" })
+            }
+            else {
+                const result = await usersCollection.insertOne(newUser);
+                res.send(result)
+
+            }
+
+        })
+
+        //products related api's
         app.get("/products", async (req, res) => {
             // const projectFields = {title: 1,price_min:1,price_max: 1,image:1}
             // const sortFields = { price_min: -1 };
@@ -92,7 +111,7 @@ async function run() {
 
         app.get("/bids/:id", async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await bidsCollection.findOne(query);
             res.send(result);
         })
