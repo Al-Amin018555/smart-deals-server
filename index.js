@@ -64,7 +64,7 @@ async function run() {
         })
 
         app.get("/latest-products", async (req, res) => {
-            const result = await productsCollection.find().sort({created_at: -1}).limit(6).toArray();
+            const result = await productsCollection.find().sort({ created_at: -1 }).limit(6).toArray();
             res.send(result)
         })
 
@@ -118,6 +118,13 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await bidsCollection.findOne(query);
+            res.send(result);
+        })
+
+        app.get("/products/bids/:productId", async (req, res) => {
+            const productId = req.params.productId;
+            const query = {product: productId};
+            const result = await bidsCollection.find(query).sort({ bid_price: -1 }).toArray();
             res.send(result);
         })
 
