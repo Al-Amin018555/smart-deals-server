@@ -3,10 +3,48 @@ const express = require('express');
 var cors = require('cors')
 const app = express()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
+
+const serviceAccount = require("./smart-deals-firebase-adminsdk.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
 
 app.use(cors())
 app.use(express.json())
+
+const logger = (req, res, next) => {
+    console.log("logger information");
+    next()
+}
+
+const verifyFireBaseToken = async (req, res, next) => {
+    // console.log("in the verify middleware", req.headers.authorization);
+
+    if (!req.headers.authorization) {
+        return res.status(401).send({ message: "unauthorized access" });
+    }
+
+    const token = req.headers.authorization.split(' ')[1]
+    if (!token) {
+        return res.status(401).send({ message: "unauthorized access" });
+    }
+
+    //verify id token
+    try {
+        const tokenInfo = await admin.auth().verifyIdToken(token);
+        console.log("after token validation", tokenInfo);
+        next()
+    }
+    catch {
+        console.log("invalid");
+        return res.status(401).send({ message: "unauthorized access" });
+    }
+
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.q3bebek.mongodb.net/?appName=Cluster0`;
 
@@ -104,7 +142,8 @@ async function run() {
 
         //bids related api's
 
-        app.get("/bids", async (req, res) => {
+        app.get("/bids", logger, verifyFireBaseToken, async (req, res) => {
+            // console.log("header",req.headers);
             const email = req.query.email;
             const query = {};
             if (email) {
@@ -123,7 +162,7 @@ async function run() {
 
         app.get("/products/bids/:productId", async (req, res) => {
             const productId = req.params.productId;
-            const query = {product: productId};
+            const query = { product: productId };
             const result = await bidsCollection.find(query).sort({ bid_price: -1 }).toArray();
             res.send(result);
         })
