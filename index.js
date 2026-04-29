@@ -7,6 +7,7 @@ const admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
 
 const serviceAccount = require("./smart-deals-firebase-adminsdk.json");
+const e = require('express');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -36,6 +37,7 @@ const verifyFireBaseToken = async (req, res, next) => {
     //verify id token
     try {
         const tokenInfo = await admin.auth().verifyIdToken(token);
+        req.token_email = tokenInfo.email;
         console.log("after token validation", tokenInfo);
         next()
     }
@@ -144,9 +146,14 @@ async function run() {
 
         app.get("/bids", logger, verifyFireBaseToken, async (req, res) => {
             // console.log("header",req.headers);
+            // console.log(req);
+
             const email = req.query.email;
             const query = {};
             if (email) {
+                if (email !== req.token_email) {
+                    return res.status(403).send({ message: "forbidden access" })
+                }
                 query.buyer_email = email;
             }
             const result = await bidsCollection.find(query).toArray();
